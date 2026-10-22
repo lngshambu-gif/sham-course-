@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sham Course Institute | Student Course Registration System</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="brand-icon">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="brand-text">
+                    <h2>Sham Course</h2>
+                    <span>Institute</span>
+                </div>
+            </div>
+
+            <div class="db-status-badge" id="dbStatusBadge" title="MySQL Workbench Connection">
+                <span class="status-dot pulsing"></span>
+                <div class="db-status-info">
+                    <span class="db-label">MySQL Workbench</span>
+                    <span class="db-val" id="dbNameLabel">course_registration_db</span>
+                </div>
+                <i class="fa-solid fa-database db-icon"></i>
+            </div>
+
+            <nav class="sidebar-menu">
+                <div class="menu-section-title">MAIN NAVIGATION</div>
+                <button class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-tab="courses">
+                    <i class="fa-solid fa-book-bookmark"></i>
+                    <span>Course Catalog</span>
+                    <span class="menu-pill" id="navCoursesCount">0</span>
+                </button>
+                <button class="nav-item" data-tab="students">
+                    <i class="fa-solid fa-user-graduate"></i>
+                    <span>Students Directory</span>
+                    <span class="menu-pill" id="navStudentsCount">0</span>
+                </button>
+                <button class="nav-item" data-tab="registrations">
+                    <i class="fa-solid fa-clipboard-check"></i>
+                    <span>Registrations Desk</span>
+                    <span class="menu-pill" id="navRegCount">0</span>
+                </button>
+
+                <div class="menu-section-title">DATABASE & TOOLS</div>
+                <button class="nav-item" data-tab="workbench">
+                    <i class="fa-solid fa-server"></i>
+                    <span>MySQL Workbench</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="active-semester-box">
+                    <i class="fa-regular fa-calendar-check"></i>
+                    <div>
+                        <small>Current Term</small>
+                        <strong>Fall Semester 2026</strong>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Workspace -->
+        <main class="main-content">
+            <!-- Top App Bar -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title" id="pageHeading">Dashboard Overview</h1>
+                    <p class="page-subtitle" id="pageSubHeading">Real-time enrollment insights & relational database management</p>
+                </div>
+                <div class="topbar-actions">
+                    <button class="btn btn-outline btn-sm" onclick="syncDatabase(true)" title="Synchronize with MySQL database">
+                        <i class="fa-solid fa-rotate" id="syncIcon"></i>
+                        <span>Sync DB</span>
+                    </button>
+                    <button class="btn btn-primary" onclick="openEnrollModal()">
+                        <i class="fa-solid fa-plus-circle"></i>
+                        <span>Register Course</span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="openStudentModal()">
+                        <i class="fa-solid fa-user-plus"></i>
+                        <span>Add Student</span>
+                    </button>
+                    <button class="btn btn-outline" onclick="openCourseModal()">
+                        <i class="fa-solid fa-folder-plus"></i>
+                        <span>Add Course</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Container for Tab Panes -->
+            <div class="content-body">
+                
+                <!-- TAB 1: DASHBOARD -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <!-- KPI Cards Grid -->
+                    <div class="metrics-grid">
+                        <div class="metric-card card-gradient-blue">
+                            <div class="metric-icon">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-title">Total Students</span>
+                                <h3 class="metric-value" id="kpiTotalStudents">--</h3>
+                                <div class="metric-footer">
+                                    <span class="trend-up"><i class="fa-solid fa-circle-check"></i> Verified Profiles</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card card-gradient-emerald">
+                            <div class="metric-icon">
+                                <i class="fa-solid fa-book-open"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-title">Offered Courses</span>
+                                <h3 class="metric-value" id="kpiTotalCourses">--</h3>
+                                <div class="metric-footer">
+                                    <span class="trend-up"><i class="fa-solid fa-layer-group"></i> Multi-Departmental</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card card-gradient-purple">
+                            <div class="metric-icon">
+                                <i class="fa-solid fa-clipboard-user"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-title">Active Registrations</span>
+                                <h3 class="metric-value" id="kpiActiveRegistrations">--</h3>
+                                <div class="metric-footer">
+                                    <span class="trend-up"><i class="fa-solid fa-check-double"></i> Enrolled Status</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="metric-card card-gradient-amber">
+                            <div class="metric-icon">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div class="metric-content">
+                                <span class="metric-title">Capacity Utilization</span>
+                                <h3 class="metric-value" id="kpiFillRate">--%</h3>
+                                <div class="metric-footer">
+                                    <span id="kpiSeatsOccupied">-- / -- Seats Taken</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- MySQL 3-Tables Visual Banner -->
+                    <div class="schema-info-banner">
+                        <div class="banner-badge">
+                            <i class="fa-solid fa-database"></i>
+                            <span>MySQL 3-Table Architecture</span>
+                        </div>
+                        <div class="schema-chips">
+                            <div class="schema-chip" onclick="switchTab('students')">
+                                <span class="chip-number">1</span>
+                                <span class="chip-name">students</span>
+                                <small>Demographics & CGPA</small>
+                            </div>
+                            <i class="fa-solid fa-arrow-right chip-arrow"></i>
+                            <div class="schema-chip chip-highlight" onclick="switchTab('registrations')">
+                                <span class="chip-number">2</span>
+                                <span class="chip-name">registration</span>
+                                <small>Foreign Keys & Junction</small>
+                            </div>
+                            <i class="fa-solid fa-arrow-left chip-arrow"></i>
+                            <div class="schema-chip" onclick="switchTab('courses')">
+                                <span class="chip-number">3</span>
+                                <span class="chip-name">courses</span>
+                                <small>Credits & Max Capacity</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Executive Analytics Visuals (Chart.js) -->
+                    <div class="analytics-charts-grid">
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-header-title">
+                                    <i class="fa-solid fa-chart-pie text-blue"></i>
+                                    <h3>Department Enrollment Distribution</h3>
+                                </div>
+                                <span class="badge badge-dept"><i class="fa-solid fa-circle text-emerald" style="font-size:0.5rem;"></i> Live Chart</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="deptDistributionChart"></canvas>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-header-title">
+                                    <i class="fa-solid fa-chart-column text-emerald"></i>
+                                    <h3>Course Capacity & Seat Occupancy</h3>
+                                </div>
+                                <span class="badge badge-dept"><i class="fa-solid fa-chart-simple text-blue"></i> Seat Analytics</span>
+                            </div>
+                            <div class="chart-canvas-wrapper">
+                                <canvas id="capacityComparisonChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dashboard Split Grid -->
+                    <div class="dashboard-split-grid">
+                        <!-- Left: Popular Courses Capacity -->
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-header-title">
+                                    <i class="fa-solid fa-fire text-amber"></i>
+                                    <h3>Course Capacity Tracker</h3>
+                                </div>
+                                <button class="btn-text" onclick="switchTab('courses')">View All Courses &rarr;</button>
+                            </div>
+                            <div class="popular-courses-list" id="dashboardPopularCourses">
+                                <div class="loading-state">Loading course capacity...</div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Recent Registrations Stream -->
+                        <div class="dashboard-card">
+                            <div class="card-header">
+                                <div class="card-header-title">
+                                    <i class="fa-solid fa-clock-rotate-left text-blue"></i>
+                                    <h3>Latest Registrations</h3>
+                                </div>
+                                <button class="btn-text" onclick="switchTab('registrations')">View Audit Log &rarr;</button>
+                            </div>
+                            <div class="recent-registrations-list" id="dashboardRecentRegistrations">
+                                <div class="loading-state">Loading recent enrollments...</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 2: COURSE CATALOG -->
+                <section id="tab-courses" class="tab-pane">
+                    <!-- Filter Toolbar -->
+                    <div class="filter-toolbar">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="courseSearchInput" placeholder="Search by course code, title, or instructor...">
+                        </div>
+                        <div class="filter-controls">
+                            <div class="select-wrapper">
+                                <select id="courseDeptFilter">
+                                    <option value="All">All Departments</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Data Science">Data Science</option>
+                                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                </select>
+                            </div>
+                            <div class="select-wrapper">
+                                <select id="courseSemesterFilter">
+                                    <option value="All">All Semesters</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                    <option value="3">Semester 3</option>
+                                    <option value="4">Semester 4</option>
+                                    <option value="5">Semester 5</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline" onclick="exportCoursesCSV()" title="Export Course Catalog as CSV file">
+                                <i class="fa-solid fa-file-csv text-emerald"></i> Export CSV
+                            </button>
+                            <button class="btn btn-secondary" onclick="openCourseModal()">
+                                <i class="fa-solid fa-plus"></i> Add Course
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Courses Grid -->
+                    <div class="courses-grid" id="coursesCardsContainer">
+                        <div class="loading-state">Loading course curriculum...</div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: STUDENTS DIRECTORY -->
+                <section id="tab-students" class="tab-pane">
+                    <!-- Filter Toolbar -->
+                    <div class="filter-toolbar">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="studentSearchInput" placeholder="Search students by name, roll number, or email...">
+                        </div>
+                        <div class="filter-controls">
+                            <div class="select-wrapper">
+                                <select id="studentDeptFilter">
+                                    <option value="All">All Departments</option>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Data Science">Data Science</option>
+                                    <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                </select>
+                            </div>
+                            <div class="select-wrapper">
+                                <select id="studentStatusFilter">
+                                    <option value="All">All Statuses</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Graduated">Graduated</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline" onclick="exportStudentsCSV()" title="Export Students Directory as CSV file">
+                                <i class="fa-solid fa-file-csv text-emerald"></i> Export CSV
+                            </button>
+                            <button class="btn btn-secondary" onclick="openStudentModal()">
+                                <i class="fa-solid fa-user-plus"></i> Add Student
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Students Directory Table Card -->
+                    <div class="data-table-card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="studentsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Student</th>
+                                        <th>Roll Number</th>
+                                        <th>Department</th>
+                                        <th>Semester</th>
+                                        <th>CGPA</th>
+                                        <th>Enrolled Courses</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="studentsTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4">Loading student records...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: REGISTRATIONS DESK -->
+                <section id="tab-registrations" class="tab-pane">
+                    <!-- Filter Toolbar -->
+                    <div class="filter-toolbar">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="regSearchInput" placeholder="Filter by student name, roll number, or course...">
+                        </div>
+                        <div class="filter-controls">
+                            <div class="select-wrapper">
+                                <select id="regStatusFilter">
+                                    <option value="All">All Statuses</option>
+                                    <option value="Enrolled">Enrolled</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="Dropped">Dropped</option>
+                                    <option value="Completed">Completed</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline" onclick="exportRegistrationsCSV()" title="Export Registration Audit Log as CSV">
+                                <i class="fa-solid fa-file-csv text-emerald"></i> Export CSV
+                            </button>
+                            <button class="btn btn-primary" onclick="openEnrollModal()">
+                                <i class="fa-solid fa-plus-circle"></i> New Enrollment
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Registrations Audit Table Card -->
+                    <div class="data-table-card">
+                        <div class="table-responsive">
+                            <table class="data-table" id="registrationsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Reg ID</th>
+                                        <th>Registration Date</th>
+                                        <th>Student Name</th>
+                                        <th>Roll No</th>
+                                        <th>Course</th>
+                                        <th>Credits</th>
+                                        <th>Status</th>
+                                        <th>Grade</th>
+                                        <th>Remarks</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="registrationsTableBody">
+                                    <tr>
+                                        <td colspan="10" class="text-center py-4">Loading registrations...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 5: MYSQL WORKBENCH HELPER -->
+                <section id="tab-workbench" class="tab-pane">
+                    <div class="workbench-guide-grid">
+                        <div class="guide-card">
+                            <div class="guide-header">
+                                <i class="fa-solid fa-database guide-icon"></i>
+                                <div>
+                                    <h3>MySQL Workbench Live Connection</h3>
+                                    <p>Your local database credentials and connection parameters</p>
+                                </div>
+                            </div>
+                            <div class="conn-specs">
+                                <div class="spec-row">
+                                    <span class="spec-label">Hostname:</span>
+                                    <span class="spec-value">localhost</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Port:</span>
+                                    <span class="spec-value">3306</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Database / Schema:</span>
+                                    <span class="spec-value font-mono">course_registration_db</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Username:</span>
+                                    <span class="spec-value font-mono">root</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Password:</span>
+                                    <span class="spec-value font-mono">sham</span>
+                                </div>
+                            </div>
+
+                            <div class="guide-steps">
+                                <h4>How to view in MySQL Workbench:</h4>
+                                <ol>
+                                    <li>Open <strong>MySQL Workbench</strong> on your computer.</li>
+                                    <li>Click on your <strong>Local instance MySQL80</strong> connection.</li>
+                                    <li>In the left sidebar under <strong>Schemas</strong>, right-click and click <strong>Refresh All</strong>.</li>
+                                    <li>Expand <code class="font-mono">course_registration_db</code> &rarr; <strong>Tables</strong>.</li>
+                                    <li>You will see all 3 tables: <strong>students</strong>, <strong>courses</strong>, and <strong>registration</strong>!</li>
+                                    <li>Right click any table and choose <strong>"Select Rows - Limit 1000"</strong> to see live records.</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="guide-card">
+                            <div class="guide-header">
+                                <i class="fa-solid fa-code guide-icon text-purple"></i>
+                                <div>
+                                    <h3>Handy SQL Queries to Run in Workbench</h3>
+                                    <p>Copy and run these directly in MySQL Workbench SQL Editor</p>
+                                </div>
+                            </div>
+                            <div class="code-snippets">
+                                <div class="snippet-box">
+                                    <div class="snippet-header">
+                                        <span>1. Query Enrolled Courses with Student Names</span>
+                                        <button class="btn-copy" onclick="copySnippet('sql-snippet-1')"><i class="fa-regular fa-copy"></i> Copy</button>
+                                    </div>
+                                    <pre id="sql-snippet-1"><code>USE course_registration_db;
+
+SELECT 
+    r.registration_id,
+    s.roll_no,
+    CONCAT(s.first_name, ' ', s.last_name) AS student_name,
+    c.course_code,
+    c.course_title,
+    c.credits,
+    r.status,
+    r.grade
+FROM registration r
+JOIN students s ON r.student_id = s.student_id
+JOIN courses c ON r.course_id = c.course_id
+WHERE r.status = 'Enrolled'
+ORDER BY r.registration_id DESC;</code></pre>
+                                </div>
+
+                                <div class="snippet-box">
+                                    <div class="snippet-header">
+                                        <span>2. Check Course Capacity & Remaining Seats</span>
+                                        <button class="btn-copy" onclick="copySnippet('sql-snippet-2')"><i class="fa-regular fa-copy"></i> Copy</button>
+                                    </div>
+                                    <pre id="sql-snippet-2"><code>USE course_registration_db;
+
+SELECT 
+    c.course_code,
+    c.course_title,
+    c.department,
+    c.max_capacity,
+    COUNT(r.registration_id) AS enrolled_students,
+    (c.max_capacity - COUNT(r.registration_id)) AS available_seats
+FROM courses c
+LEFT JOIN registration r ON c.course_id = r.course_id AND r.status = 'Enrolled'
+GROUP BY c.course_id;</code></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- MODAL 1: REGISTER / ENROLL IN COURSE -->
+    <div class="modal-overlay" id="enrollModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-graduation-cap text-blue"></i>
+                    <div>
+                        <h3>Course Enrollment Wizard</h3>
+                        <p>Link a student with an open academic course in the database</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('enrollModal')">&times;</button>
+            </div>
+            <form id="enrollForm" onsubmit="handleEnrollSubmit(event)">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="enrollStudentSelect">Select Student <span class="req">*</span></label>
+                        <select id="enrollStudentSelect" class="form-control" required onchange="onEnrollStudentChange()">
+                            <option value="">-- Choose Student --</option>
+                        </select>
+                        <div class="input-hint" id="enrollStudentHint">Select a student to view their current credit load.</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enrollCourseSelect">Select Course <span class="req">*</span></label>
+                        <select id="enrollCourseSelect" class="form-control" required onchange="onEnrollCourseChange()">
+                            <option value="">-- Choose Course --</option>
+                        </select>
+                        <div class="course-capacity-preview" id="enrollCoursePreview" style="display: none;">
+                            <!-- Dynamically populated -->
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="enrollSemester">Academic Semester</label>
+                            <input type="text" id="enrollSemester" class="form-control" value="Fall 2026" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="enrollRemarks">Registration Remarks</label>
+                            <input type="text" id="enrollRemarks" class="form-control" placeholder="e.g. Regular semester registration">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" onclick="closeModal('enrollModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitEnroll">
+                        <i class="fa-solid fa-check"></i> Complete Registration
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: ADD / EDIT STUDENT -->
+    <div class="modal-overlay" id="studentModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-user-graduate text-emerald"></i>
+                    <div>
+                        <h3 id="studentModalTitle">Add New Student</h3>
+                        <p>Record student profile in the <code class="font-mono">students</code> table</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('studentModal')">&times;</button>
+            </div>
+            <form id="studentForm" onsubmit="handleStudentSubmit(event)">
+                <input type="hidden" id="studentEditId">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentRollNo">Roll / Reg Number <span class="req">*</span></label>
+                            <input type="text" id="studentRollNo" class="form-control font-mono" placeholder="STU-2026-007" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentDepartment">Department <span class="req">*</span></label>
+                            <select id="studentDepartment" class="form-control" required>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Data Science">Data Science</option>
+                                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electrical Engineering">Electrical Engineering</option>
+                                <option value="Business Analytics">Business Analytics</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentFirstName">First Name <span class="req">*</span></label>
+                            <input type="text" id="studentFirstName" class="form-control" placeholder="e.g. Siddharth" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentLastName">Last Name <span class="req">*</span></label>
+                            <input type="text" id="studentLastName" class="form-control" placeholder="e.g. Joshi" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentEmail">Email Address <span class="req">*</span></label>
+                            <input type="email" id="studentEmail" class="form-control" placeholder="siddharth.joshi@campus.edu" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentPhone">Phone Number</label>
+                            <input type="tel" id="studentPhone" class="form-control" placeholder="+91 98765 43210">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="studentSemester">Current Semester</label>
+                            <select id="studentSemester" class="form-control">
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3" selected>Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5">Semester 5</option>
+                                <option value="6">Semester 6</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="studentCgpa">CGPA (0.00 - 4.00)</label>
+                            <input type="number" id="studentCgpa" class="form-control" step="0.01" min="0" max="4.00" value="3.75">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentStatus">Account Status</label>
+                            <select id="studentStatus" class="form-control">
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Graduated">Graduated</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentAvatarUrl">Avatar Photo URL</label>
+                        <input type="url" id="studentAvatarUrl" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                        <div class="quick-avatar-picker">
+                            <span>Quick Avatars:</span>
+                            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100" class="avatar-preview-option" onclick="pickAvatar(this.src)">
+                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100" class="avatar-preview-option" onclick="pickAvatar(this.src)">
+                            <img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100" class="avatar-preview-option" onclick="pickAvatar(this.src)">
+                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100" class="avatar-preview-option" onclick="pickAvatar(this.src)">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" onclick="closeModal('studentModal')">Cancel</button>
+                    <button type="submit" class="btn btn-emerald" id="btnSubmitStudent">Save Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3: ADD / EDIT COURSE -->
+    <div class="modal-overlay" id="courseModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-book-bookmark text-blue"></i>
+                    <div>
+                        <h3 id="courseModalTitle">Add New Course</h3>
+                        <p>Register curriculum into the <code class="font-mono">courses</code> table</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('courseModal')">&times;</button>
+            </div>
+            <form id="courseForm" onsubmit="handleCourseSubmit(event)">
+                <input type="hidden" id="courseEditId">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseCode">Course Code <span class="req">*</span></label>
+                            <input type="text" id="courseCode" class="form-control font-mono" placeholder="CS-205" required>
+                        </div>
+                        <div class="form-group flex-2">
+                            <label for="courseTitle">Course Title <span class="req">*</span></label>
+                            <input type="text" id="courseTitle" class="form-control" placeholder="e.g. Cybersecurity Fundamentals & Threat Analysis" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseDepartment">Department <span class="req">*</span></label>
+                            <select id="courseDepartment" class="form-control" required>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Data Science">Data Science</option>
+                                <option value="Artificial Intelligence">Artificial Intelligence</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electrical Engineering">Electrical Engineering</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseCredits">Credits <span class="req">*</span></label>
+                            <input type="number" id="courseCredits" class="form-control" min="1" max="6" value="3" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseCapacity">Max Capacity (Seats) <span class="req">*</span></label>
+                            <input type="number" id="courseCapacity" class="form-control" min="5" max="150" value="35" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseInstructor">Instructor Name <span class="req">*</span></label>
+                            <input type="text" id="courseInstructor" class="form-control" placeholder="Prof. Jane Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseSchedule">Lecture Schedule</label>
+                            <input type="text" id="courseSchedule" class="form-control" placeholder="Mon, Wed 10:00 AM - 11:30 AM">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="courseClassroom">Classroom / Lab</label>
+                            <input type="text" id="courseClassroom" class="form-control" placeholder="Hall B - Room 204">
+                        </div>
+                        <div class="form-group">
+                            <label for="courseSemester">Target Semester</label>
+                            <select id="courseSemester" class="form-control">
+                                <option value="1">Semester 1</option>
+                                <option value="2">Semester 2</option>
+                                <option value="3" selected>Semester 3</option>
+                                <option value="4">Semester 4</option>
+                                <option value="5">Semester 5</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="courseStatus">Course Status</label>
+                            <select id="courseStatus" class="form-control">
+                                <option value="Open">Open</option>
+                                <option value="Closed">Closed</option>
+                                <option value="Archived">Archived</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="courseDescription">Course Syllabus / Description</label>
+                        <textarea id="courseDescription" class="form-control" rows="2" placeholder="Course goals, theoretical foundations, hands-on lab projects, and assessment milestones..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="courseThumbnailUrl">Thumbnail Image URL</label>
+                        <input type="url" id="courseThumbnailUrl" class="form-control" placeholder="https://images.unsplash.com/photo-...">
+                        <div class="quick-avatar-picker">
+                            <span>Preset Course Covers:</span>
+                            <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=100" class="avatar-preview-option" onclick="pickCover(this.src)">
+                            <img src="https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=100" class="avatar-preview-option" onclick="pickCover(this.src)">
+                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100" class="avatar-preview-option" onclick="pickCover(this.src)">
+                            <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=100" class="avatar-preview-option" onclick="pickCover(this.src)">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" onclick="closeModal('courseModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitCourse">Save Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4: UPDATE REGISTRATION (Status & Grade) -->
+    <div class="modal-overlay" id="editRegModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-pen-to-square text-purple"></i>
+                    <div>
+                        <h3>Update Registration Record</h3>
+                        <p id="editRegSubtitle">Edit enrollment status or grade</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('editRegModal')">&times;</button>
+            </div>
+            <form id="editRegForm" onsubmit="handleUpdateRegSubmit(event)">
+                <input type="hidden" id="editRegId">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="editRegStatus">Registration Status</label>
+                        <select id="editRegStatus" class="form-control" required>
+                            <option value="Enrolled">Enrolled</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Dropped">Dropped</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editRegGrade">Grade</label>
+                        <select id="editRegGrade" class="form-control">
+                            <option value="In Progress">In Progress</option>
+                            <option value="A+">A+ (4.0)</option>
+                            <option value="A">A (3.8)</option>
+                            <option value="B+">B+ (3.5)</option>
+                            <option value="B">B (3.0)</option>
+                            <option value="C">C (2.5)</option>
+                            <option value="F">F (0.0)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="editRegRemarks">Registrar Remarks</label>
+                        <input type="text" id="editRegRemarks" class="form-control" placeholder="e.g. Prerequisites approved by department head">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" onclick="closeModal('editRegModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 5: PRINTABLE REGISTRATION SLIP -->
+    <div class="modal-overlay" id="slipModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header no-print">
+                <div class="modal-title">
+                    <i class="fa-solid fa-file-invoice text-emerald"></i>
+                    <div>
+                        <h3>Official Course Registration Slip</h3>
+                        <p>Academic Registrar Verification Document</p>
+                    </div>
+                </div>
+                <div class="header-action-group">
+                    <button class="btn btn-secondary btn-sm" onclick="window.print()">
+                        <i class="fa-solid fa-print"></i> Print Slip / PDF
+                    </button>
+                    <button class="modal-close" onclick="closeModal('slipModal')">&times;</button>
+                </div>
+            </div>
+
+            <div class="slip-container" id="printableSlipArea">
+                <!-- Academic Header -->
+                <div class="slip-header">
+                    <div class="slip-crest">
+                        <i class="fa-solid fa-graduation-cap"></i>
+                    </div>
+                    <div class="slip-institution">
+                        <h2>SHAM COURSE INSTITUTE</h2>
+                        <p>Office of the Academic Registrar | Course Registration Certification</p>
+                        <span>Academic Term: Fall Semester 2026</span>
+                    </div>
+                    <div class="slip-stamp">
+                        <div class="stamp-box">
+                            <small>OFFICIAL RECORD</small>
+                            <strong>VERIFIED</strong>
+                            <span id="slipTimestamp">2026-10-21</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student Profile Summary -->
+                <div class="slip-student-info" id="slipStudentInfo">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Enrolled Courses List -->
+                <div class="slip-courses-section">
+                    <h4>REGISTERED COURSES & SCHEDULE</h4>
+                    <table class="slip-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Course Code</th>
+                                <th>Course Title</th>
+                                <th>Department</th>
+                                <th>Instructor</th>
+                                <th>Schedule</th>
+                                <th>Credits</th>
+                            </tr>
+                        </thead>
+                        <tbody id="slipCoursesBody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="6" class="text-right"><strong>TOTAL REGISTERED CREDITS:</strong></td>
+                                <td id="slipTotalCredits"><strong>0</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Footer Signatures -->
+                <div class="slip-footer">
+                    <div class="sig-col">
+                        <div class="sig-line"></div>
+                        <p>Student Signature</p>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-line"></div>
+                        <p>Department Head Signature</p>
+                    </div>
+                    <div class="sig-col">
+                        <div class="sig-line"></div>
+                        <p>Registrar Seal & Stamp</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 6: COURSE ENROLLED STUDENTS LIST -->
+    <div class="modal-overlay" id="courseStudentsModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-users-rectangle text-blue"></i>
+                    <div>
+                        <h3 id="csModalTitle">Enrolled Students</h3>
+                        <p id="csModalSubtitle">Class roster and enrolled roster</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('courseStudentsModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Student</th>
+                                <th>Roll Number</th>
+                                <th>Department</th>
+                                <th>Enrollment Date</th>
+                                <th>Status</th>
+                                <th>Grade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="csModalTableBody">
+                            <!-- Dynamically loaded -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    <!-- MODAL 7: STUDENT PROFILE & ACADEMIC TRANSCRIPT -->
+    <div class="modal-overlay" id="studentProfileModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fa-solid fa-id-card-clip text-blue"></i>
+                    <div>
+                        <h3 id="spModalTitle">Student Academic Profile</h3>
+                        <p id="spModalSubtitle">Comprehensive student file & enrollment history</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeModal('studentProfileModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="spModalBody">
+                <!-- Dynamically loaded student dossier -->
+            </div>
+            <div class="modal-footer" id="spModalFooter">
+                <!-- Dynamically loaded footer buttons -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Custom JS App -->
+    <script src="js/app.js"></script>
+</body>
+</html>
